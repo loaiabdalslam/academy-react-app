@@ -2,13 +2,13 @@
 import { Formik } from 'formik';
 import * as Yup from 'yup';
 import React, { Component } from 'react';
+import ReCAPTCHA from "react-google-recaptcha";
+import { ApiService } from '../../api/user';
+import {toast} from 'react-toastify';
 
 class SignForm extends Component {
   render() {
     return (
-
-        
-
 
         <div className='container'>
         <h1>
@@ -18,30 +18,39 @@ class SignForm extends Component {
           </a>{' '}
           Demo
         </h1>
-    
         <Formik
           initialValues={{ email: '' ,name:'',password:'',passwordConfirm:''}}
-          onSubmit={(values, { setSubmitting }) => {
+          onSubmit={(values, { props,setSubmitting }) => {
             setTimeout(() => {
-              alert(JSON.stringify(values, null, 2));
-              setSubmitting(false);
-            }, 500);
-          }}
+              ApiService.signup({
+              email:values.email,
+              name:values.name,
+              password:values.password,
+              'g-recaptcha-response':'Test Here Thats Not Fair !'}).then(payload=>{
+                setSubmitting(false)
+                toast.success("Signup Successfully")
+                props.loggedin(payload)}).catch(err=>{
+                setSubmitting(false)
+                toast.error(err.data&&err.data.msg?err.data.msg:'Error !')
+                })
+                
+              },500)
+
+              console.log(JSON.stringify(values));
+            }
+          }
           validationSchema={Yup.object().shape({
             email: Yup.string()
               .email()
               .required('Email address is required Required'),
-            name:Yup.string().
-            max(8,'Name is Too Long').
-            min(4,'Name is Too short').
-            required('Name is Required'),
-            password:Yup.string().
-            required('Required'),
-            passwordConfirm:Yup.string().
-            oneOf([Yup.ref('password')],'Password Would Matches !').
-              required('Required'),
+            name:Yup.string().max(8,'Name is Too Long').min(4,'Name is Too short').required('Name is Required'),
+            password:Yup.string().required('Required'),
+            passwordConfirm:Yup.string().oneOf([Yup.ref('password')],'Password Would Matches !').required('Required'),
+            // recaptcha: Yup.string().required()
 
-          })}
+          })
+
+      }
         >
           {props => {
             const {
@@ -54,6 +63,7 @@ class SignForm extends Component {
               handleBlur,
               handleSubmit,
               handleReset,
+              setFieldValue
             } = props;
             return (
 
@@ -131,7 +141,10 @@ class SignForm extends Component {
       <label class="form-check-label" for="exampleCheck1">Check me out</label>
   </div>
 
-
+       {/* <ReCAPTCHA
+          sitekey="Your client site key"
+          onChange={(response)=>{setFieldValue("recaptcha",response)}}
+        /> */}
         
     
                 <button
@@ -139,8 +152,8 @@ class SignForm extends Component {
                   className="btn btn-primary"
                   onClick={handleReset}
                   disabled={!dirty || isSubmitting}
-                >
-                  Reset
+                    >
+                    Reset
                 </button>
                 <button class ="btn btn-primary" type="submit" disabled={!dirty || isSubmitting}>
                   Submit

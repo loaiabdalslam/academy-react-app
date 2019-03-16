@@ -30,6 +30,8 @@ class Navbar extends Component {
 
       <NavBarLink to="/login" label="Login"/>
       <NavBarLink to="/signup" label="Sign up"/>
+      <NavBarLink to="/profile" label="Profile"/>
+
 
      
    
